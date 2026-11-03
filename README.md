@@ -1,5 +1,7 @@
 # Vim Motions
 
+This branch combines the IME focus-memory and Chinese Flash features for personal testing. See [Personal release](PERSONAL_RELEASE.md) for installation and version details. It is maintained separately from both feature branches and their pull requests.
+
 A polished, Neovim-native experience inside [Obsidian](https://obsidian.md). Vim Motions adds what's missing from Obsidian's built-in Vim mode: Markdown-aware text objects, structural navigation, hard-wrap formatting, workspace keyboard control, EasyMotion, Lua configuration with `vim.keymap.set` / `vim.opt` / `vim.fn` / `vim.api` / `vim.tbl_*` / autocommands / timers / highlight groups, and a built-in `.obsidian.vimrc` loader.
 
 **[Full documentation →](https://saberzero1.github.io/motions)**

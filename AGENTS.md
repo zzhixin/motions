@@ -341,6 +341,7 @@ For viewport-dependent behavior (H/M/L, scroll, folds), use regular `it()` block
 
 ## Versioning & releases
 
+- Personal integration builds on `integration/ime-and-chinese` use `personal-*` tags, retain the upstream manifest version, and are uploaded manually as prereleases. This is an exception to the community-release tag rule below; `.github/workflows/release.yml` excludes these tags. Keep integration fixes and release changes off the two source feature branches.
 - Bump `version` in `manifest.json` (SemVer) and update `versions.json` to map plugin version → minimum app version.
 - Create a GitHub release whose tag exactly matches `manifest.json`'s `version`. Do not use a leading `v`.
 - Attach `manifest.json`, `main.js`, and `styles.css` (if present) to the release as individual assets.

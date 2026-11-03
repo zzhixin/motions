@@ -14,12 +14,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Flash `/` and `?` searches match up to four-character pinyin-initial patterns** — `/aj` finds `安静` and `氨基`, and `/dg` finds `大g`; longer patterns retain ordinary Vim search behavior.
     - Short pinyin-enabled submissions are handled by Flash before Vim's native search, while `:` commands and longer/unsupported patterns retain native command-line behavior.
 
+### Changed
+
+- **Personal integration build** — combines `feat/chinese-jump-support` at `7d11890` and `feat/ime-focus-memory` at `caa4f6e` on `integration/ime-and-chinese`. The `personal-*` prerelease tags are excluded from automatic community releases; the plugin keeps upstream version `1.5.1` for manual installation.
+
 ### Tests
 
 - Added Flash target coverage for pinyin-initial matches and UTF-16 columns after surrogate pairs in `test/unit/flash-targets.test.ts`.
 
 ### Documentation
 
+- `PERSONAL_RELEASE.md`
+- `AGENTS.md`
 - `README.md`
 - `docs/features/flash.md`
 - `docs/features/index.md`
