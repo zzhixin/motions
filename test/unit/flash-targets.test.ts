@@ -1,4 +1,7 @@
 import { describe, it, expect } from 'vitest';
+import { EditorState, RangeSet } from '@codemirror/state';
+import { Decoration } from '@codemirror/view';
+import type { CmAdapter } from '../../src/types/vim-api';
 import {
     findSubstringTargets,
     findCharTargets,
@@ -9,6 +12,118 @@ import {
     findFlashPatternMatches,
     isFlashSearchPattern,
 } from '../../src/flash/character-match';
+import { filterVisibleTargets } from '../../src/easymotion/overlay';
+
+describe('Flash targets inside a trailing rendered math block', () => {
+    const prefix = 'above\n\n';
+    const formula = '$$\nx+x+x+x+x+x+x+x+x+x+x+x\n$$';
+
+    function renderedMath(tail: string, viewportTo?: number) {
+        const state = EditorState.create({ doc: prefix + formula + tail });
+        const from = prefix.length;
+        const to = from + formula.length;
+        const viewport = { from: 0, to: viewportTo ?? state.doc.length };
+        const visibleRanges: { from: number; to: number }[] = [];
+        // Same range computation and minimum replacement length as CM6's
+        // view state. A large trailing block leaves no text range after it.
+        RangeSet.spans(
+            [
+                Decoration.set([
+                    Decoration.replace({ block: true }).range(from, to),
+                ]),
+            ],
+            viewport.from,
+            viewport.to,
+            {
+                span(from, to) {
+                    visibleRanges.push({ from, to });
+                },
+                point() {},
+            },
+            20,
+        );
+        return {
+            getLine: (line: number) => state.doc.line(line + 1).text,
+            getCursor: () => ({ line: 0, ch: 0 }),
+            lastLine: () => state.doc.lines - 1,
+            indexFromPos: ({ line, ch }: { line: number; ch: number }) =>
+                state.doc.line(line + 1).from + ch,
+            cm6: {
+                state,
+                viewport,
+                visibleRanges,
+                coordsAtPos: (offset: number) => ({
+                    left: offset >= from && offset <= to ? 300 : offset * 8,
+                    top: offset >= from && offset <= to ? 50 : 0,
+                    right: 300,
+                    bottom: 70,
+                }),
+            },
+        } as unknown as CmAdapter;
+    }
+
+    it.each(['', '\n', '\n\nafter'])(
+        'finds formula characters with trailing text %j',
+        (tail) => {
+            const cm = renderedMath(tail);
+            expect(findCharTargets(cm, 'x', 'forward')).toEqual(
+                Array.from({ length: 12 }, (_, i) => ({ line: 3, ch: 2 * i })),
+            );
+        },
+    );
+
+    it('retains a selectable widget target after coordinate deduplication', () => {
+        const cm = renderedMath('');
+        expect(
+            filterVisibleTargets(cm, findCharTargets(cm, 'x', 'forward')),
+        ).toEqual([{ line: 3, ch: 0 }]);
+    });
+
+    it('also scans the terminal block for incremental jump patterns', () => {
+        expect(
+            findSubstringTargets(renderedMath(''), 'x+x', 'forward'),
+        ).toEqual(
+            Array.from({ length: 11 }, (_, i) => ({
+                line: 3,
+                ch: 2 * i,
+                matchLength: 3,
+            })),
+        );
+    });
+
+    it('does not scan a math block below the viewport', () => {
+        expect(
+            findCharTargets(
+                renderedMath('', prefix.length - 1),
+                'x',
+                'forward',
+            ),
+        ).toEqual([]);
+    });
+
+    it('keeps the first visible text position when the viewport starts in hidden frontmatter', () => {
+        const state = EditorState.create({
+            doc: '---\ntitle: xxx\n---\nvisible\n\n' + formula,
+        });
+        const cm = {
+            getLine: (line: number) => state.doc.line(line + 1).text,
+            getCursor: () => ({ line: 3, ch: 0 }),
+            cm6: {
+                state,
+                viewport: { from: 0, to: state.doc.length },
+                visibleRanges: [
+                    {
+                        from: state.doc.line(4).from,
+                        to: state.doc.line(6).from,
+                    },
+                ],
+            },
+        } as unknown as CmAdapter;
+        expect(findCharTargets(cm, 'x', 'bidirectional')).toEqual(
+            Array.from({ length: 12 }, (_, i) => ({ line: 6, ch: 2 * i })),
+        );
+    });
+});
 
 function stubCm(lines: string[]) {
     const totalLen = lines.reduce((sum, l) => sum + l.length + 1, 0);

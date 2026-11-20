@@ -18,18 +18,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Personal integration build** — combines `feat/chinese-jump-support` at `7d11890` and `feat/ime-focus-memory` at `caa4f6e` on `integration/ime-and-chinese`. The `personal-*` prerelease tags are excluded from automatic community releases; the plugin keeps upstream version `1.5.1` for manual installation.
 
+### Fixed
+
+- **Flash misses characters in a rendered math block at EOF** — jump target scanning now includes the viewport's trailing source even when CM6 omits the MathJax replacement from `visibleRanges`. No trailing newline is required. Existing coordinate filtering, widget-target deduplication, frontmatter bounds and Lua window information are preserved.
+    - Plugin: `src/easymotion/targets.ts`
+- **Bundled Vim navigation enters concealed source before LaTeX Suite's reveal delay** — character, word, line, display-line, page and half-page navigation now respects the editor's `atomicRanges` before submitting cursor positions. Counted `h`/`l` crosses visible units; characterwise visual navigation keeps Vim's own selection aligned. Operator-pending edits preserve source-based ranges. The adapter composes with table navigation and is removed on settings reload and Vim teardown. LaTeX Suite and the Vim dependency are unchanged.
+    - Plugin: `src/vim/atomic-range-motions.ts`, `src/main.ts`
+
 ### Tests
 
+- Added 7 regressions in `test/unit/flash-targets.test.ts` using CM6's actual replacement-range computation: EOF, trailing newline/text, coordinate deduplication, incremental patterns, offscreen blocks and hidden frontmatter. Red first: EOF produced 0 character targets instead of 12, 0 selectable widget targets instead of 1, and 0 substring targets instead of 11. Negative controls also expose scanning beyond the viewport (12 targets instead of 0) and scanning hidden frontmatter (15 instead of 12). Physical keyboard checks in an isolated Obsidian 1.14.5 vault reproduce the old `f`/`t` failure and verify the fix alongside middle-of-document, short-formula and trailing-newline controls.
 - Added Flash target coverage for pinyin-initial matches and UTF-16 columns after surrogate pairs in `test/unit/flash-targets.test.ts`.
+- Added 22 installed-engine regressions in `test/unit/atomic-range-motions.test.ts`, including direction, counts, visual selections, edit ranges, dynamic reveal, editor isolation, overlapping ranges, EOL clipping, vertical goals and teardown. Negative controls: disabling the adapter produced column 2 instead of 7; removing the operator guard deleted `\\alpha` instead of `\\`; caching ranges kept column 7 after reveal instead of 2; removing teardown kept column 7 instead of 2; overwriting the vertical goal produced column 6 instead of 3 on the next line. All controls were restored and the suite passed.
 
 ### Documentation
 
 - `PERSONAL_RELEASE.md`
 - `AGENTS.md`
+- `CONTRIBUTING.md`
+- `KNOWN_LIMITATIONS.md`
+- `docs/guides/ecosystem-compatibility.md`
 - `README.md`
 - `docs/features/flash.md`
 - `docs/features/index.md`
 - `docs/reference/keybindings.md`
+- `docs/plans/live-preview-navigation.md`: future preview-navigation scope, character units, editing boundaries and staged acceptance plan; no feature implementation.
 
 ## [1.5.1] - 2026-11-01
 

@@ -158,6 +158,7 @@ src/
     vim-api.d.ts           # Type declarations for the Vim API (CmAdapter, VimApi, etc.)
     globals.ts             # __DEV__ build-time constant type declaration
   vim/
+    atomic-range-motions.ts # CM6 atomicRanges navigation for the bundled engine; wrap after table motions and dispose before them on reload/teardown
     vim-api.ts             # getVimApi(), getCmAdapter(), isVimEnabled()
     registration.ts        # VimRegistration — tracks and cleans up all Vim API registrations
     bundled-vim.ts         # Bundled vim fork registration as CM6 extension + editorLivePreviewField wiring + propertiesInDocument source-mode detection via setPropertiesSource + CodeMirrorAdapter bridge (Vim API + isCursorSuppressedForView for test access)

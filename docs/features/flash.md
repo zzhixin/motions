@@ -24,6 +24,8 @@ When Flash is enabled, a Latin target also matches Chinese characters by pinyin 
 
 By default, flash searches the entire visible viewport — not just the current line. This means `f{char}` can jump to matches on other lines.
 
+Live Preview target scanning also includes a rendered math block at the end of the note, even without a trailing newline. Matches use source positions and CodeMirror's widget coordinates; matches sharing the same widget position produce one selectable target rather than separate labels for every MathJax glyph.
+
 To restrict `f`/`F`/`t`/`T` to the current line (stock Vim behavior), disable multi-line in **Settings → Vim Motions → Jump navigation → Flash multi-line**, or:
 
 ```vim

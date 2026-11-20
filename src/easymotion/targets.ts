@@ -23,6 +23,23 @@ export function getVisibleRange(cm: CmAdapter): VisibleRange {
     return { fromLine, toLine };
 }
 
+function getTargetRange(cm: CmAdapter): VisibleRange {
+    const range = getVisibleRange(cm);
+    const view = cm.cm6;
+    // Large replace decorations (e.g. a rendered $$ block) are omitted
+    // from visibleRanges. At EOF there is no later text range to extend
+    // the scan past that widget. Include the viewport's trailing source;
+    // coordinate filtering still decides which targets can be displayed.
+    // Keep getVisibleRange's text-only bounds for Lua window information.
+    if (view?.viewport) {
+        range.toLine = Math.max(
+            range.toLine,
+            view.state.doc.lineAt(view.viewport.to).number - 1,
+        );
+    }
+    return range;
+}
+
 function isForward(
     target: Target,
     cursorLine: number,
@@ -112,7 +129,7 @@ export function findWordStartTargets(
     direction: Direction,
     bigWord: boolean,
 ): Target[] {
-    const { fromLine, toLine } = getVisibleRange(cm);
+    const { fromLine, toLine } = getTargetRange(cm);
     const raw = bigWord
         ? collectBigWordStartTargets(cm, fromLine, toLine)
         : collectRegexTargets(cm, WORD_START_RE, fromLine, toLine);
@@ -127,7 +144,7 @@ export function findWordEndTargets(
     direction: Direction,
     bigWord: boolean,
 ): Target[] {
-    const { fromLine, toLine } = getVisibleRange(cm);
+    const { fromLine, toLine } = getTargetRange(cm);
     const re = bigWord ? BIG_WORD_CHARS_RE : WORD_CHARS_RE;
     const targets: Target[] = [];
     for (let line = fromLine; line <= toLine; line++) {
@@ -147,7 +164,7 @@ export function findCharTargets(
     direction: Direction,
     matcher?: (text: string, target: string) => number[],
 ): Target[] {
-    const { fromLine, toLine } = getVisibleRange(cm);
+    const { fromLine, toLine } = getTargetRange(cm);
     const targets: Target[] = [];
     for (let line = fromLine; line <= toLine; line++) {
         const text = cm.getLine(line);
@@ -177,7 +194,7 @@ export function findSubstringTargets(
     direction: Direction,
 ): Target[] {
     if (!pattern) return [];
-    const { fromLine, toLine } = getVisibleRange(cm);
+    const { fromLine, toLine } = getTargetRange(cm);
     const targets: Target[] = [];
     for (let line = fromLine; line <= toLine; line++) {
         const text = cm.getLine(line);
@@ -244,7 +261,7 @@ function skipHiddenPrefix(
 }
 
 export function findLineTargets(cm: CmAdapter, direction: Direction): Target[] {
-    const { fromLine, toLine } = getVisibleRange(cm);
+    const { fromLine, toLine } = getTargetRange(cm);
     const view = cm.cm6;
     const targets: Target[] = [];
     for (let line = fromLine; line <= toLine; line++) {
@@ -269,7 +286,7 @@ export function findSearchTargets(
         { source: string; flags: string } | undefined;
     if (!query?.source) return [];
 
-    const { fromLine, toLine } = getVisibleRange(cm);
+    const { fromLine, toLine } = getTargetRange(cm);
     let re: RegExp;
     try {
         re = new RegExp(query.source, 'g' + (query.flags ?? ''));

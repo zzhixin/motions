@@ -17,6 +17,14 @@ Vim Motions is compatible with other Vim-related plugins by design, not through 
 
 These mechanisms are not targeted at specific plugins — they ensure compatibility with the entire ecosystem of plugins that use the standard Vim API discovery path.
 
+## Concealed content and LaTeX Suite
+
+With the bundled engine, character, word, line, display-line, page and half-page navigation respects the hidden ranges plugins provide through CodeMirror's `EditorView.atomicRanges`. For example, `h`/`l` crosses a concealed LaTeX command without first placing the cursor inside its hidden source. Counted character motions count visible steps, and characterwise visual navigation updates Vim's selection before it reaches CodeMirror.
+
+LaTeX Suite continues to own its conceal settings and reveal delay. Keep its existing delay, such as 200ms; no second timer, plugin-specific API or modified Vim dependency is required. Once LaTeX Suite reveals a range, ordinary source-character navigation resumes immediately. This preserves its existing reveal policy rather than imposing a delay on every possible Vim jump.
+
+The adapter applies to navigation, not operator-pending edit ranges such as `dl`, `dw` and `x`. Visual-line mode retains its existing behavior. Built-in Obsidian Vim and the external Neovim backend retain their own navigation behavior.
+
 ## Built-in vim mode
 
 When built-in vim is enabled, the plugin extends Obsidian's bundled codemirror-vim instance. The Vim API is accessed via `window.CodeMirrorAdapter.Vim` without any bridge — it's the standard path. All ecosystem plugins work as expected.

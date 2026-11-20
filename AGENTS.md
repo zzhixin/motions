@@ -61,6 +61,10 @@ The plugin operates in two modes:
 
 Both modes expose an identical API surface. The fork provides additional capabilities: async motion support (for EasyMotion operator-pending), Neovim-correct cursor positioning, and various behavioral fixes.
 
+Bundled-mode navigation respects CM6 `EditorView.atomicRanges` through `src/vim/atomic-range-motions.ts`, without depending on LaTeX Suite internals or changing its reveal timer. Install these wrappers after table-cell motion wrappers and dispose them before the table wrappers, both on settings reload and Vim teardown. Operator-pending edits and visual-line mode keep their original motion behavior. Query atomic ranges per invocation so delayed reveal immediately restores source-character movement.
+
+Flash/EasyMotion target scanning in `src/easymotion/targets.ts` extends its trailing bound to `view.viewport.to`: CM6 omits large replace decorations from `visibleRanges`, so a terminal MathJax block otherwise has no searchable source. Keep the first bound based on `visibleRanges` for frontmatter, and keep the exported `getVisibleRange()` unchanged for Lua window information. Coordinate filtering and widget-coordinate deduplication still decide which targets are selectable. `test/unit/flash-targets.test.ts` reproduces the omission with real CM6 replace decorations.
+
 **Note**: This sample project has specific technical dependencies on npm and esbuild. If you're creating a plugin from scratch, you can choose different tools, but you'll need to replace the build configuration accordingly.
 
 ### Install
@@ -181,6 +185,7 @@ npm run build
         cleanup.ts             # runCleanups: exception-isolated disposal, continues past a failure
         key-capture.ts         # Single owner of a modal keydown listener; releases on resolve, abort, and teardown
       vim/
+        atomic-range-motions.ts # Bundled-mode atomicRanges navigation; composed outside table motions, removed first
         external-mode.ts       # Backend-reported vim mode for per-mode host rendering and IM switching
       workspace/
         key-observer.ts        # Physical key observation feeding vim.on_key

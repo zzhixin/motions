@@ -304,6 +304,7 @@ import { isInsideInlineNodeType } from './treesitter/js-api';
 import { isBuiltinVimEnabled, getVaultConfig } from './util/vault';
 import { invariant, devAssert } from './util/invariant';
 import { applyTableCellMotions } from './vim/table-cell-motions';
+import { applyAtomicRangeMotions } from './vim/atomic-range-motions';
 import { createTableCellCursorGuard } from './vim/table-cell-cursor-guard';
 import { createTableNavExtension } from './vim/table-nav-controller';
 import { realignTableLines } from './vim/table-utils';
@@ -395,6 +396,7 @@ export default class VimMotionsPlugin extends Plugin {
     private flashSearchCleanup: (() => void) | null = null;
     private uninstallVisualLineFix: (() => void) | null = null;
     private uninstallTableCellMotions: (() => void) | null = null;
+    private uninstallAtomicRangeMotions: (() => void) | null = null;
 
     private yankHighlightCleanup: (() => void) | null = null;
     private markGutterCleanup: (() => void) | null = null;
@@ -2816,6 +2818,9 @@ export default class VimMotionsPlugin extends Plugin {
                 vim,
             );
         }
+        if (isBundledVimActive()) {
+            this.uninstallAtomicRangeMotions = applyAtomicRangeMotions(vim);
+        }
         activeDocument.body.classList.toggle(
             'vim-motions-raw-table',
             this.settings.tableWidgetMode === 'raw',
@@ -3125,6 +3130,8 @@ export default class VimMotionsPlugin extends Plugin {
         this.cleanupHintModeWindows();
         this.uninstallVisualLineFix?.();
         this.uninstallVisualLineFix = null;
+        this.uninstallAtomicRangeMotions?.();
+        this.uninstallAtomicRangeMotions = null;
         this.uninstallTableCellMotions?.();
         this.uninstallTableCellMotions = null;
         this.exSuggest?.destroy();
@@ -3905,6 +3912,8 @@ export default class VimMotionsPlugin extends Plugin {
         const vim = getVimApi();
         if (!vim) return;
 
+        this.uninstallAtomicRangeMotions?.();
+        this.uninstallAtomicRangeMotions = null;
         this.uninstallTableCellMotions?.();
         this.uninstallTableCellMotions = null;
 
@@ -4082,6 +4091,9 @@ export default class VimMotionsPlugin extends Plugin {
                 this.app,
                 vim,
             );
+        }
+        if (isBundledVimActive()) {
+            this.uninstallAtomicRangeMotions = applyAtomicRangeMotions(vim);
         }
         activeDocument.body.classList.toggle(
             'vim-motions-raw-table',
