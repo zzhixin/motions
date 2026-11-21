@@ -158,6 +158,8 @@ src/
     vim-api.d.ts           # Type declarations for the Vim API (CmAdapter, VimApi, etc.)
     globals.ts             # __DEV__ build-time constant type declaration
   vim/
+    chinese-words.ts       # Chinese word motion/text-object installation and teardown
+    chinese-word-range.ts  # Shared word range traversal, whitespace/count and subword handling
     atomic-range-motions.ts # CM6 atomicRanges navigation for the bundled engine; wrap after table motions and dispose before them on reload/teardown
     vim-api.ts             # getVimApi(), getCmAdapter(), isVimEnabled()
     registration.ts        # VimRegistration — tracks and cleans up all Vim API registrations
@@ -442,6 +444,7 @@ src/
     input-modal.ts         # Obsidian Modal for vim.fn.input() prompt (async user input)
     vimrc-file-suggest.ts  # File suggestion for vimrc/Lua config path settings
   util/
+    chinese-word-boundaries.ts # Lazy Han segmentation with bounded immutable-text caching
     cleanup.ts             # runCleanups() — exception-isolated disposal; continues past a throwing finalizer and reports each one
     key-capture.ts         # captureKeys() — single owner of a modal keydown listener and anything acquired with it; returns {promise, abort}, releases on every exit path
     commands.ts            # executeCommand() and getCommandRegistry() — null-safe wrappers for app.commands (typed via obsidian-typings Commands interface, no casts)

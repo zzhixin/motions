@@ -7,6 +7,19 @@ tags:
     - cheat-sheet
 ---
 
+## Chinese word segmentation
+
+These existing Vim commands recognize dictionary words in Chinese text in the bundled engine. Non-Chinese text keeps ordinary Vim word/WORD behavior.
+
+| Key                               | Action                                                              |
+| --------------------------------- | ------------------------------------------------------------------- |
+| `w` / `W`                         | Next Chinese word; count supported                                  |
+| `dw` / `cw` / `yw`                | Delete / change / yank to the next word                             |
+| `diw` / `ciw` / `yiw`             | Delete / change / yank the word under the cursor                    |
+| `daw` / `caw` / `yaw`             | Delete / change / yank a word with adjacent whitespace              |
+| `b` / `B`, `e` / `E`, `ge` / `gE` | Previous word start, next / previous word end                       |
+| `iw` / `aw`, `iW` / `aW`          | Inner / around word text objects in operator-pending or visual mode |
+
 ## Markdown text objects
 
 Operate on Markdown structures with standard Vim operators (`d`, `c`, `y`, `v`).

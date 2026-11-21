@@ -377,23 +377,13 @@ export function applyTableCellMotions(
     app: App,
     vim: VimApi,
 ): (() => void) | null {
-    // Capture originals once. getMotion() returns bound functions (fork fix)
-    // so they preserve `this` (the motions table) when called standalone.
-    if (!origMoveByLines) {
-        origMoveByLines = (vim.getMotion('moveByLines') as MotionFn) ?? null;
-    }
-    if (!origMoveByCharacters) {
-        origMoveByCharacters =
-            (vim.getMotion('moveByCharacters') as MotionFn) ?? null;
-    }
-    if (!origMoveByDisplayLines) {
-        origMoveByDisplayLines =
-            (vim.getMotion('moveByDisplayLines') as MotionFn) ?? null;
-    }
-
-    if (!origMoveByWords) {
-        origMoveByWords = (vim.getMotion('moveByWords') as MotionFn) ?? null;
-    }
+    // Capture the current inner wrappers on every installation. In particular,
+    // Chinese segmentation is replaced on settings reload and must not be kept
+    // alive through a callback saved by a previous table-motion installation.
+    origMoveByLines = vim.getMotion('moveByLines') ?? null;
+    origMoveByCharacters = vim.getMotion('moveByCharacters') ?? null;
+    origMoveByDisplayLines = vim.getMotion('moveByDisplayLines') ?? null;
+    origMoveByWords = vim.getMotion('moveByWords') ?? null;
 
     if (!origMoveByLines || !origMoveByCharacters) return null;
 

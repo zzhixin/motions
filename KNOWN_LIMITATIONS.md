@@ -4,6 +4,10 @@ This document tracks known limitations, architectural constraints, and intention
 
 For previously fixed issues, see [Resolved Issues](#resolved-issues) at the bottom of this document.
 
+## Chinese word segmentation
+
+The bundled Vim engine uses the runtime's `Intl.Segmenter` dictionary; results can vary between platforms. Without that API, Han text falls back to complete Unicode characters. Fixed 256-unit UTF-16 windows bound dictionary work on long lines, so a word crossing a window edge may be split. The optional Neovim backend uses its native word rules rather than the renderer's dictionary. See [Chinese word segmentation](docs/features/chinese-words.md).
+
 ## Conceal navigation scope
 
 The bundled Vim engine's character, word, line, display-line, page and half-page navigation now respects CM6 `atomicRanges`, including ranges supplied by LaTeX Suite. Operator-pending edits retain source-based ranges, and visual-line mode keeps its existing behavior. Other motions, such as character searches, direct column/line-end moves and custom jumps, are outside this adapter. LaTeX Suite still owns reveal timing: this change does not guarantee a universal 200ms delay for every Vim command. Full Obsidian/LaTeX Suite rendering and performance require interactive verification; the regression suite runs the installed Vim engine against CM6 state with fixed geometry.

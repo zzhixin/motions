@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Chinese word motions and text objects** — `w`/`W`, `dw`/`cw`/`yw`, `diw`/`daw`, `ciw`/`caw`, and `yiw`/`yaw` use native dictionary boundaries in the bundled engine. Related start/end motions, counts, registers, visual selections, dot-repeat, subword mappings, and settings reload share those boundaries. Segmentation is lazy, local and cached in bounded UTF-16 windows; older runtimes fall back to complete Han characters.
+    - Plugin: `src/util/chinese-word-boundaries.ts`, `src/vim/chinese-word-range.ts`, `src/vim/chinese-words.ts`, `src/vim/table-cell-motions.ts`, `src/types/vim-api.d.ts`, `src/main.ts`
+
 - **Flash character motions match Chinese pinyin initials** — with Flash enabled, `fa` can find Chinese characters such as `啊` and `安`; ordinary Vim character motions remain literal. The lookup is precomputed for responsive scans.
     - Plugin: `src/flash/character-match.ts`, `src/flash/pinyin-initials.ts`, `src/flash/char-mode.ts`, `src/easymotion/targets.ts`
 - **Flash `/` and `?` searches match up to four-character pinyin-initial patterns** — `/aj` finds `安静` and `氨基`, and `/dg` finds `大g`; longer patterns retain ordinary Vim search behavior.
@@ -27,11 +30,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Tests
 
+- Added 74 installed-engine/cache regressions in `test/unit/chinese-words.test.ts`, a physical-key WebdriverIO spec, and `test/bench/chinese-words.bench.ts`. All 11 requested commands passed real CDP keyboard events in an isolated Obsidian 1.14.5 vault and failed with the feature removed. Negative controls and local latency measurements are recorded in `test/specs/chinese-words-negative-controls.md`.
+
 - Added 7 regressions in `test/unit/flash-targets.test.ts` using CM6's actual replacement-range computation: EOF, trailing newline/text, coordinate deduplication, incremental patterns, offscreen blocks and hidden frontmatter. Red first: EOF produced 0 character targets instead of 12, 0 selectable widget targets instead of 1, and 0 substring targets instead of 11. Negative controls also expose scanning beyond the viewport (12 targets instead of 0) and scanning hidden frontmatter (15 instead of 12). Physical keyboard checks in an isolated Obsidian 1.14.5 vault reproduce the old `f`/`t` failure and verify the fix alongside middle-of-document, short-formula and trailing-newline controls.
 - Added Flash target coverage for pinyin-initial matches and UTF-16 columns after surrogate pairs in `test/unit/flash-targets.test.ts`.
 - Added 22 installed-engine regressions in `test/unit/atomic-range-motions.test.ts`, including direction, counts, visual selections, edit ranges, dynamic reveal, editor isolation, overlapping ranges, EOL clipping, vertical goals and teardown. Negative controls: disabling the adapter produced column 2 instead of 7; removing the operator guard deleted `\\alpha` instead of `\\`; caching ranges kept column 7 after reveal instead of 2; removing teardown kept column 7 instead of 2; overwriting the vertical goal produced column 6 instead of 3 on the next line. All controls were restored and the suite passed.
 
 ### Documentation
+
+- `CHANGELOG.md`
+- `docs/features/chinese-words.md`
+- `docs/features/text-objects.md`
+- `test/specs/chinese-words-negative-controls.md`
 
 - `PERSONAL_RELEASE.md`
 - `AGENTS.md`

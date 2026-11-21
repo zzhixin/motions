@@ -64,6 +64,10 @@ The scanner for these blocks skips lines within fenced code blocks to avoid fals
 
 Tag text objects (`it` / `at`) allow you to operate on HTML or XML tags within your Markdown files. These are implemented via raw text scanning rather than a full HTML parser to ensure compatibility with Markdown-mixed content.
 
+## Chinese word objects
+
+The bundled engine's `iw`/`aw` and `iW`/`aW` recognize Chinese words, including `diw`/`daw`, `ciw`/`caw`, and `yiw`/`yaw`. See [[chinese-words|Chinese word segmentation]] for motion behavior and platform limits.
+
 ## General-purpose text objects
 
 These text objects provide standard Vim-like behavior for common programming and writing patterns:

@@ -37,6 +37,8 @@ export interface VimYankEvent {
 export interface MotionArgs {
     repeat: number;
     forward?: boolean;
+    bigWord?: boolean;
+    wordEnd?: boolean;
     linewise?: boolean;
     textObjectInner?: boolean;
     selectedCharacter?: string;

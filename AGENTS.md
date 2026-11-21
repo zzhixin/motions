@@ -61,6 +61,8 @@ The plugin operates in two modes:
 
 Both modes expose an identical API surface. The fork provides additional capabilities: async motion support (for EasyMotion operator-pending), Neovim-correct cursor positioning, and various behavioral fixes.
 
+Chinese word support lives in `src/vim/chinese-words.ts` (motion API installation), `src/vim/chinese-word-range.ts` (motion/text-object ranges) and `src/util/chinese-word-boundaries.ts` (lazy native segmentation and bounded text-keyed LRU). Install it before table and atomic wrappers; dispose in reverse order. Table wrappers must capture current callbacks on each installation rather than retaining a previous Chinese reader. Han dictionary calls use fixed 256-unit UTF-16 windows, extended to preserve surrogate pairs, and a 64-entry cache. No document-wide segmentation, dictionary download, async key handling or extra timeout is added. Missing `Intl.Segmenter` falls back to code points. `test/unit/chinese-words.test.ts` covers the installed engine, subword/table composition and cache limits. The optional Neovim backend retains native word behavior.
+
 Bundled-mode navigation respects CM6 `EditorView.atomicRanges` through `src/vim/atomic-range-motions.ts`, without depending on LaTeX Suite internals or changing its reveal timer. Install these wrappers after table-cell motion wrappers and dispose them before the table wrappers, both on settings reload and Vim teardown. Operator-pending edits and visual-line mode keep their original motion behavior. Query atomic ranges per invocation so delayed reveal immediately restores source-character movement.
 
 Flash/EasyMotion target scanning in `src/easymotion/targets.ts` extends its trailing bound to `view.viewport.to`: CM6 omits large replace decorations from `visibleRanges`, so a terminal MathJax block otherwise has no searchable source. Keep the first bound based on `visibleRanges` for frontmatter, and keep the exported `getVisibleRange()` unchanged for Lua window information. Coordinate filtering and widget-coordinate deduplication still decide which targets are selectable. `test/unit/flash-targets.test.ts` reproduces the omission with real CM6 replace decorations.
@@ -141,6 +143,11 @@ npm run build
       fold/
         frontmatter.ts           # Shared start-of-document YAML delimiter rule
         metadata.ts            # Immutable heading ranges/titles and fence languages keyed by exact EditorState
+      util/
+        chinese-word-boundaries.ts # Lazy Han segmentation with bounded immutable-text caching
+      vim/
+        chinese-words.ts       # Chinese word motion/text-object installation and teardown
+        chinese-word-range.ts  # Shared word range traversal, whitespace/count and subword handling
       types/
         lua-modules.d.ts       # Text-loader declaration for bundled Lua companion sources
       im/

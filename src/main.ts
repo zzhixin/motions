@@ -305,6 +305,7 @@ import { isBuiltinVimEnabled, getVaultConfig } from './util/vault';
 import { invariant, devAssert } from './util/invariant';
 import { applyTableCellMotions } from './vim/table-cell-motions';
 import { applyAtomicRangeMotions } from './vim/atomic-range-motions';
+import { applyChineseWordMotions } from './vim/chinese-words';
 import { createTableCellCursorGuard } from './vim/table-cell-cursor-guard';
 import { createTableNavExtension } from './vim/table-nav-controller';
 import { realignTableLines } from './vim/table-utils';
@@ -397,6 +398,7 @@ export default class VimMotionsPlugin extends Plugin {
     private uninstallVisualLineFix: (() => void) | null = null;
     private uninstallTableCellMotions: (() => void) | null = null;
     private uninstallAtomicRangeMotions: (() => void) | null = null;
+    private uninstallChineseWordMotions: (() => void) | null = null;
 
     private yankHighlightCleanup: (() => void) | null = null;
     private markGutterCleanup: (() => void) | null = null;
@@ -2806,6 +2808,7 @@ export default class VimMotionsPlugin extends Plugin {
                 this.settings,
             );
         }
+        this.uninstallChineseWordMotions = applyChineseWordMotions(vim);
         // Whenever the setting can mean native, so the Neovim backend
         // disconnecting reinstalls nothing: while it is connected, `auto`
         // reveals tables and no cell editor opens to use them.
@@ -3134,6 +3137,8 @@ export default class VimMotionsPlugin extends Plugin {
         this.uninstallAtomicRangeMotions = null;
         this.uninstallTableCellMotions?.();
         this.uninstallTableCellMotions = null;
+        this.uninstallChineseWordMotions?.();
+        this.uninstallChineseWordMotions = null;
         this.exSuggest?.destroy();
         this.exSuggest = null;
         this.exPanelClearance?.destroy();
@@ -3916,6 +3921,8 @@ export default class VimMotionsPlugin extends Plugin {
         this.uninstallAtomicRangeMotions = null;
         this.uninstallTableCellMotions?.();
         this.uninstallTableCellMotions = null;
+        this.uninstallChineseWordMotions?.();
+        this.uninstallChineseWordMotions = null;
 
         if (typeof vim.resetKeymap === 'function') {
             vim.resetKeymap();
@@ -4080,6 +4087,7 @@ export default class VimMotionsPlugin extends Plugin {
                 this.settings,
             );
         }
+        this.uninstallChineseWordMotions = applyChineseWordMotions(vim);
         // Whenever the setting can mean native, so the Neovim backend
         // disconnecting reinstalls nothing: while it is connected, `auto`
         // reveals tables and no cell editor opens to use them.
