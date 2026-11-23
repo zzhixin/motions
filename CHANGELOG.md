@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Live Preview Markdown conceal** — opt-in visible-text navigation for single-line emphasis, inline code, headings, Markdown links and wikilink aliases. Reveal source after an idle delay (default 200 ms, configurable from 0–10000 ms) or only when editing. Characterwise visual selections retain source coordinates; operators and text objects keep source ranges. Per-view syntax-tree caches and cancellable reveal clocks bound work and clean up on reload. Available in both settings UIs and through `previewconceal`, `previewconcealreveal`, `previewconcealdelay` vimrc/Lua options.
+    - Plugin: `src/vim/conceal/`, `src/main.ts`, `src/settings.ts`, `src/vimrc/loader.ts`
+
 - **Chinese word motions and text objects** — `w`/`W`, `dw`/`cw`/`yw`, `diw`/`daw`, `ciw`/`caw`, and `yiw`/`yaw` use native dictionary boundaries in the bundled engine. Related start/end motions, counts, registers, visual selections, dot-repeat, subword mappings, and settings reload share those boundaries. Segmentation is lazy, local and cached in bounded UTF-16 windows; older runtimes fall back to complete Han characters.
     - Plugin: `src/util/chinese-word-boundaries.ts`, `src/vim/chinese-word-range.ts`, `src/vim/chinese-words.ts`, `src/vim/table-cell-motions.ts`, `src/types/vim-api.d.ts`, `src/main.ts`
 
@@ -19,9 +22,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Long-lived personal branch** — rename `integration/ime-and-chinese` to `personal/main` for ongoing personal features, fixes and future official upstream merges. Keep the cumulative documentation baseline and historical prerelease identities unchanged.
+
 - **Personal integration build** — combines `feat/chinese-jump-support` at `7d11890` and `feat/ime-focus-memory` at `caa4f6e` on `integration/ime-and-chinese`. The `personal-*` prerelease tags are excluded from automatic community releases; the plugin keeps upstream version `1.5.1` for manual installation.
 
 ### Fixed
+
+- **Static checks parse generated installation bundles as source** — exclude `personal-releases/` and `vim-motions-plugin/` from ESLint and Prettier. Keep historical artifacts unchanged while checking the maintained source and documentation.
+    - Build: `eslint.config.mts`, `.prettierignore`
+
+- **Host search reuses an earlier visual-line selection** — selection queries now report only the current native or active Vim selection. Keep expiring, per-view snapshots solely for delayed replacements, prefer a new native selection and clear snapshots on consumption or view destruction. `V` → `Ctrl+F` still seeds the first search; reopening after visual exit no longer revives that text.
+    - Plugin: `src/vim/visual-line-command-fix.ts`
+
+- **Normal-mode `I` inserts a literal character with conceal enabled** — pass internal action calls directly to the original motion when they omit navigation arguments or Vim state. The action completes first-nonblank insert entry, so the key is consumed normally and text/formatting remain intact.
+    - Plugin: `src/vim/conceal/motions.ts`
+
+- **`gj` cannot enter a short final wrapped row** — allow an EOF edge result when it advances to another display row, clamp to the final character and preserve the screen-column goal for `gk`. Counted motions stop at the real display boundary. The correction lives in the fork motion, distributed as a versioned install/build patch until a registry release contains it.
+    - Fork: `src/vim.js` (`moveByDisplayLines`), recorded in `patches/upstream/codemirror-vim-display-line-eof.diff`
+    - Build: `patches/@replit+codemirror-vim+6.4.8.patch`, `esbuild.config.mjs`, `package.json`, `package-lock.json`
+
+- **Cursor stays at preview coordinates after source reveal** — display-only conceal refreshes now request the fork's normal cursor measurement and invalidate the animated cursor's geometry/glyph cache. Both cursors align with revealed source without movement, synthetic commands or selection changes.
+    - Plugin: `src/vim/cursor-layout.ts`, `src/vim/conceal/controller.ts`, `src/vim/animated-cursor/controller.ts`
+
+- **Revealed Markdown source collapses on the next motion** — retain source per syntax group until the cursor leaves, and use the same state for decorations and navigation so delimiters and link destinations remain editable. Adjacent regions stay independent, including inside a revealed heading and while editing. Region bounds follow edits and visual mode uses its actual Vim head.
+    - Plugin: `src/vim/conceal/reveal.ts`, `src/vim/conceal/controller.ts`, `src/settings.ts`
 
 - **Flash misses characters in a rendered math block at EOF** — jump target scanning now includes the viewport's trailing source even when CM6 omits the MathJax replacement from `visibleRanges`. No trailing newline is required. Existing coordinate filtering, widget-target deduplication, frontmatter bounds and Lua window information are preserved.
     - Plugin: `src/easymotion/targets.ts`
@@ -30,6 +54,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Tests
 
+- Added seven selection-cache unit regressions plus shared real-rendering probes for single/multiline search reopening and direct/command-based delayed replacement. The old artifact reopens with `alpha selected line` instead of an empty query; removing either replacement snapshot produces insertion instead of replacement. Evidence is in `test/specs/visual-line-search-negative-controls.md`.
+
+- Audited the other partial internal motion callers and added command-level `==`, `gUU`, `g~~`, `g??` regressions. Removing the generic argument/state guard fails all four; restoring it preserves source coordinates and edits. The installed engine's scrolling and surround call signatures were also checked; evidence is in `test/specs/preview-conceal-negative-controls.md`.
+
+- Added nine installed-engine regressions for `I` on indented plain/Markdown/blank lines, active/inactive conceal navigation and partial internal motion calls. Two real-rendering physical-key cases check `Shift+I`, typing and Escape. The old artifact writes `  alpha bIeta` and stays in normal mode; repaired entry retains `  alpha beta`, enters insert mode and selects column 2. Evidence is in `test/specs/preview-conceal-negative-controls.md`.
+
+- Added four installed-engine EOF display-line regressions and two real-rendering cases with conceal enabled/disabled. Old `gj` stays at source column 104 instead of reaching 140; repaired `gk` returns to 104 with the same goal. Boundary/goal sabotages and evidence are recorded in `test/specs/display-line-eof-negative-controls.md`.
+
+- Added two real-rendering cursor regressions for delayed source reveal, measuring the blinking cursor DOM and actual animated canvas pixels without moving the selection. The old build fails with 15.597 px / 15.720 px errors; repaired errors are 0 px / 0.262 px. Evidence is recorded in `test/specs/preview-conceal-negative-controls.md`.
+
+- Added 7 per-region reveal regressions and a real-rendering retention probe for source motion, adjacent links, insert-mode isolation, edit mapping, heading siblings and visual endpoints. The old build hides `[ab](one)` as `ab` on `l` and sends `3l` to column 18 instead of 5; repaired results and negative controls are recorded in `test/specs/preview-conceal-negative-controls.md`.
+
+- Added 45 model, installed-engine motion, cache and deadline tests plus a shared real-rendering WDIO/CDP probe. The isolated Obsidian 1.14.5 renderer verifies visual selection, source reveal timing, editing, zero delay and reload; physical key events and large-document latency were checked separately. Sabotage values, host-boundary regressions and measured latency are recorded in `test/specs/preview-conceal-negative-controls.md`.
+
 - Added 74 installed-engine/cache regressions in `test/unit/chinese-words.test.ts`, a physical-key WebdriverIO spec, and `test/bench/chinese-words.bench.ts`. All 11 requested commands passed real CDP keyboard events in an isolated Obsidian 1.14.5 vault and failed with the feature removed. Negative controls and local latency measurements are recorded in `test/specs/chinese-words-negative-controls.md`.
 
 - Added 7 regressions in `test/unit/flash-targets.test.ts` using CM6's actual replacement-range computation: EOF, trailing newline/text, coordinate deduplication, incremental patterns, offscreen blocks and hidden frontmatter. Red first: EOF produced 0 character targets instead of 12, 0 selectable widget targets instead of 1, and 0 substring targets instead of 11. Negative controls also expose scanning beyond the viewport (12 targets instead of 0) and scanning hidden frontmatter (15 instead of 12). Physical keyboard checks in an isolated Obsidian 1.14.5 vault reproduce the old `f`/`t` failure and verify the fix alongside middle-of-document, short-formula and trailing-newline controls.
@@ -37,6 +75,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added 22 installed-engine regressions in `test/unit/atomic-range-motions.test.ts`, including direction, counts, visual selections, edit ranges, dynamic reveal, editor isolation, overlapping ranges, EOL clipping, vertical goals and teardown. Negative controls: disabling the adapter produced column 2 instead of 7; removing the operator guard deleted `\\alpha` instead of `\\`; caching ranges kept column 7 after reveal instead of 2; removing teardown kept column 7 instead of 2; overwriting the vertical goal produced column 6 instead of 3 on the next line. All controls were restored and the suite passed.
 
 ### Documentation
+
+- `AGENTS.md`, `CONTRIBUTING.md`, `docs/changes-since-84770d2/index.md`: document generated-artifact exclusions from source linting and formatting.
+- `AGENTS.md`: make personal-branch documentation rules explicit and independent of the current branch name, including incremental canonical docs, upstream-merge records, commit/release status and evidence requirements. Update ongoing branch references to `personal/main` while preserving historical release names.
+- `docs/changes-since-84770d2/index.md`: cumulative Chinese record of every feature/fix since the integration baseline, including current working-tree changes, regression origins, settings, architecture, performance evidence and a commit index. Dedicated directory for subsequent records in this range; canonical docs continue to receive incremental updates.
+- `PERSONAL_RELEASE.md`, `README.md`, `docs/features/index.md`, `AGENTS.md`: link the cumulative record and distinguish historical prerelease contents from later changes.
+
+- `test/specs/visual-line-search-negative-controls.md`
+- `docs/guides/plugin-integration.md`
+
+- `test/specs/display-line-eof-negative-controls.md`
+
+- `docs/feature/Vim_Motions_IME_重构需求与技术路线.md`: moved from the repository root and organized into scope, area identity, mode/cross-app rules, architecture and acceptance criteria. Cross-app expectations now state the existing setting's on/off conditions; added a feature-index link.
+
+- `docs/features/preview-conceal.md`
+- `docs/configuration/settings.md`
+- `docs/configuration/vimrc.md`
+- `test/specs/preview-conceal-negative-controls.md`
 
 - `CHANGELOG.md`
 - `docs/features/chinese-words.md`
@@ -52,7 +107,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `docs/features/flash.md`
 - `docs/features/index.md`
 - `docs/reference/keybindings.md`
-- `docs/plans/live-preview-navigation.md`: future preview-navigation scope, character units, editing boundaries and staged acceptance plan; no feature implementation.
+- `docs/plans/live-preview-navigation.md`: first-stage implementation status, millisecond delay settings and deferred scope.
 
 ## [1.5.1] - 2026-11-01
 

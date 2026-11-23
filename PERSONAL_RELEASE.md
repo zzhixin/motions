@@ -9,6 +9,8 @@ This prerelease combines two independently maintained features on `integration/i
 
 Both source branches share upstream `1.5.1` (`84770d2`) as their base and merge without text conflicts. Integration commits do not update either source branch or its existing pull request.
 
+This document describes the tagged prerelease above. The ongoing personal branch is now `personal/main`. For later features and fixes, see the [cumulative summary since `84770d2`](docs/changes-since-84770d2/index.md); those changes are not implied to be included in this archive.
+
 ## Install
 
 Download the three release assets, or extract the ZIP. Copy `main.js`, `manifest.json`, and `styles.css` into your vault's `.obsidian/plugins/vim-motions/` directory, then reload the plugin. Keep your existing `data.json` so your settings remain available.
@@ -21,4 +23,4 @@ The integrated tree passed source, test, and configuration TypeScript checks, ES
 
 ## Future updates
 
-Merge new commits from either feature branch into `integration/ime-and-chinese`, resolve and test there, and create a new `personal-*` tag. Keep fixes specific to integration and release packaging on this branch. The automatic release workflow excludes personal tags; upload assets manually and mark each release as a prerelease.
+Maintain ongoing personal features and fixes on `personal/main`; merge updates from feature branches and the official `upstream` repository there, resolve and test, and create a new `personal-*` tag when preparing an archive. Keep personal fixes and release packaging on this branch. The automatic release workflow excludes personal tags; upload assets manually and mark each release as a prerelease.

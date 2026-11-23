@@ -276,6 +276,16 @@ Use `set <option>=<value>`.
 | `virtualedit`           | `ve`     | Cursor past EOL (`onemore`/`all`/`block`/`insert`)                                                                                                                                                                                                                                                | (off)                                                                      |
 | `nrformats`             | `nf`     | Number formats for `<C-a>`/`<C-x>` (`bin,hex,octal`)                                                                                                                                                                                                                                              | `bin,hex`                                                                  |
 
+## Live Preview conceal
+
+```vim
+set previewconceal
+set previewconcealreveal=delay
+set previewconcealdelay=200
+```
+
+`previewconceal` defaults to off. `previewconcealreveal` accepts `delay` (default) or `insert`. `previewconcealdelay` is milliseconds, from 0 to 10000; 0 reveals immediately. These options affect the bundled engine in Live Preview. See [[preview-conceal]].
+
 ## Mode prompt customization
 
 ```vim

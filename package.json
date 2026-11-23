@@ -27,7 +27,8 @@
         "test:coverage": "tsx test/coverage-report.ts",
         "test:neovim-smoke": "tsx test/neovim/smoke.ts",
         "test:neovim-record": "tsx test/neovim/record-golden.ts",
-        "test:neovim-compare": "NEOVIM_COMPARE=1 wdio run ./wdio.conf.mts"
+        "test:neovim-compare": "NEOVIM_COMPARE=1 wdio run ./wdio.conf.mts",
+        "postinstall": "patch-package --error-on-fail"
     },
     "keywords": [],
     "license": "MIT",
@@ -57,6 +58,7 @@
         "mocha": "^11.7.6",
         "neovim": "^5.4.0",
         "obsidian": "^1.13.1",
+        "patch-package": "8.0.1",
         "prettier": "3.9.6",
         "puppeteer-core": "^25.10.0",
         "tsx": "^4.22.4",

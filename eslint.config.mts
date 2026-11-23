@@ -21,6 +21,9 @@ export default defineConfig(
         'scripts/typecheck-tests.mjs',
         'versions.json',
         'main.js',
+        // Generated installation copies and historical release artifacts.
+        'personal-releases/**',
+        'vim-motions-plugin/**',
         'package.json',
         'package-lock.json',
         'tsconfig.json',

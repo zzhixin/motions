@@ -1,1 +1,4 @@
 test-vault
+# Generated installation copies and historical release artifacts.
+personal-releases
+vim-motions-plugin

@@ -30,6 +30,7 @@ import {
     clearCursorSuppressedForView,
 } from '@replit/codemirror-vim';
 import { invariant, devAssert } from '../../util/invariant';
+import { cursorLayoutChanged } from '../cursor-layout';
 
 const STALE_THRESHOLD_MS = 500;
 
@@ -239,7 +240,12 @@ class CursorController implements Tickable {
             scrollTop !== this.cachedScrollTop ||
             scrollLeft !== this.cachedScrollLeft;
 
-        if (vu.docChanged) {
+        const layoutChanged = vu.transactions.some((transaction) =>
+            transaction.effects.some((effect) =>
+                effect.is(cursorLayoutChanged),
+            ),
+        );
+        if (vu.docChanged || layoutChanged) {
             // The character a block cursor repaints is cached by position
             // and row, and an edit such as `x` changes it without moving
             // either: the deleted letter was painted again (#181).
@@ -249,9 +255,10 @@ class CursorController implements Tickable {
         // An edit can move the caret without setting the selection — Enter
         // outdenting an empty nested bullet maps it through the change — so
         // a change wakes the cursor as a selection does (#181).
-        if (vu.selectionSet || vu.docChanged) {
+        if (vu.selectionSet || vu.docChanged || layoutChanged) {
             this.needsPositionUpdate = true;
             this.active = true;
+            if (layoutChanged) this.snapOnNextTick = true;
             this.lastMoveTime = performance.now();
             getAnimatedCursorManager().wake();
         } else if (scrollChanged) {

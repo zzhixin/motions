@@ -33,6 +33,12 @@ end, { desc = "Description for which-key" })
 > end)
 > ```
 
+### Visual-line selection and delayed edits
+
+Commands invoked while `V` is active can read the complete selected lines through Obsidian's Editor API. Once visual mode ends, selection queries return only a new current selection. Reopening the host search does not reuse the old visual-line region.
+
+For an async edit, capture the selected text before waiting. Vim Motions retains a private replacement snapshot for up to 30 seconds, allowing a later `editor.replaceSelection()` to replace the original lines. A new native selection takes precedence, and consuming the snapshot or closing the editor clears it. The snapshot does not make `editor.somethingSelected()` or `editor.getSelection()` report an old selection after Escape.
+
 ## Better Paste
 
 [Better Paste](https://github.com/johansan/better-paste/) by Johan Sanneblad cleans up pasted text — stripping invisible characters, straightening curly quotes, removing URL tracking parameters, and optionally downloading images. By default it hooks `Ctrl+V` / `Cmd+V`, but vim's `p`/`P` operators bypass that hook because they paste from vim registers, not the system clipboard.

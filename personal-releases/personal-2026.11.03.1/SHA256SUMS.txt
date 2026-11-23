@@ -1,0 +1,4 @@
+e90fcde15558d0fd098114e47452cd4e7122c2d8751dff5f817cc3438a29d0db  vim-motions/main.js
+bc76358bbb6699a126a7b52dfd5f9cf6d3c2d9f340e43ee2bebab335bb2a2976  vim-motions/manifest.json
+80b1c15ccb6e54a3ab94c81f3a3009439337fd4a6a30c478f7cf47f258a86387  vim-motions/styles.css
+16ae51ec3cb35fdbd3cc5900f7fe101685d72faa3becea1330ac92a6537a1713  vim-motions-personal-2026.11.03.1.zip

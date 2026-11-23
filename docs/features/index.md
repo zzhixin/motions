@@ -9,6 +9,7 @@ Vim Motions adds Markdown-aware editing capabilities to Obsidian's Vim mode. Eac
 
 ## Markdown editing
 
+- **[[preview-conceal|Live Preview conceal]]** — navigate visible Markdown with a configurable source reveal delay in milliseconds, or reveal only while editing.
 - **[[chinese-words|Chinese word segmentation]]** — dictionary-based Chinese word motions and text objects, including delete/change/yank operators, counts and dot-repeat.
 - **[[text-objects|Text objects]]** — 13 Markdown-aware text objects for bold, italic, code, math, strikethrough, highlight, links, blockquotes, callouts, code blocks, tags, table rows, and table cells, plus **general-purpose objects** for subwords (`iS`), numbers (`in`), quotes (`iq`), wikilinks (`iD`), URLs (`gL`), and arguments (`i,`). Supports **custom text objects via Lua**.
 - **[[structural-navigation|Structural navigation]]** — jump between headings (`]h`/`[h`), list items (`]l`/`[l`), links (`]n`/`[n`), and open buffers (`]b`/`[b`), plus **subword motions** (`w`/`b`/`e`/`ge`) for camelCase/snake_case navigation. Works with counts and operators.
@@ -45,3 +46,11 @@ Vim Motions adds Markdown-aware editing capabilities to Obsidian's Vim mode. Eac
 - **[[neovim-backend|Neovim backend]]** — opt-in desktop connection to a user-supplied Neovim 0.12+ process. Neovim owns active-note editing over msgpack-RPC while Obsidian keeps workspace, vault, picker, and embedded-editor ownership.
 
 All features are configurable via the [[settings|Settings UI]], [[lua-config|.obsidian.init.lua]], or [[vimrc|.obsidian.vimrc]]. Configuration files support **hot-reload on save** and can be managed via Obsidian commands. See the [[keybindings|keybinding cheat sheet]] for a complete reference of all motions and commands.
+
+## 需求与技术路线
+
+- **[[feature/Vim_Motions_IME_重构需求与技术路线|按编辑区域记忆输入法]]** — Windows 11 的区域身份、Vim 模式交接、跨应用策略、异步执行边界和验收清单。此页为需求与设计说明。
+
+## 个人分支变更记录
+
+- **[[changes-since-84770d2/index|84770d2 之后的功能与修复汇总]]** — `personal/main` 的输入法区域记忆、Flash 拼音、中文分词、Markdown conceal 与相关缺陷修复；包含提交索引、设置和验证范围。

@@ -306,6 +306,9 @@ import { invariant, devAssert } from './util/invariant';
 import { applyTableCellMotions } from './vim/table-cell-motions';
 import { applyAtomicRangeMotions } from './vim/atomic-range-motions';
 import { applyChineseWordMotions } from './vim/chinese-words';
+import { createPreviewConceal } from './vim/conceal/controller';
+import { applyPreviewConcealMotions } from './vim/conceal/motions';
+import { concealDelay } from './vim/conceal/options';
 import { createTableCellCursorGuard } from './vim/table-cell-cursor-guard';
 import { createTableNavExtension } from './vim/table-nav-controller';
 import { realignTableLines } from './vim/table-utils';
@@ -398,6 +401,7 @@ export default class VimMotionsPlugin extends Plugin {
     private uninstallVisualLineFix: (() => void) | null = null;
     private uninstallTableCellMotions: (() => void) | null = null;
     private uninstallAtomicRangeMotions: (() => void) | null = null;
+    private uninstallPreviewConcealMotions: (() => void) | null = null;
     private uninstallChineseWordMotions: (() => void) | null = null;
 
     private yankHighlightCleanup: (() => void) | null = null;
@@ -461,6 +465,7 @@ export default class VimMotionsPlugin extends Plugin {
     private treesitterExtensionSlot: Extension[] = [];
     private buildTreesitterBridge: (() => Extension) | null = null;
     private animatedCursorSlot: Extension[] = [];
+    private previewConcealSlot: Extension[] = [];
     private undoTreeSlot: Extension[] = [];
 
     private tableRevealSlot: Extension[] = [];
@@ -2822,6 +2827,9 @@ export default class VimMotionsPlugin extends Plugin {
             );
         }
         if (isBundledVimActive()) {
+            if (this.settings.previewConceal)
+                this.uninstallPreviewConcealMotions =
+                    applyPreviewConcealMotions(vim);
             this.uninstallAtomicRangeMotions = applyAtomicRangeMotions(vim);
         }
         activeDocument.body.classList.toggle(
@@ -3041,6 +3049,7 @@ export default class VimMotionsPlugin extends Plugin {
         // contents change at runtime. Rebuilding the outer slot instead would
         // mean re-running this whole method, which is not idempotent.
         this.vimExtensionSlot.push(this.animatedCursorSlot);
+        this.vimExtensionSlot.push(this.previewConcealSlot);
         this.populateRuntimeSlots();
         this.vimExtensionSlot.push(
             createFoldColumnExtension(this.settings.foldcolumn),
@@ -3135,6 +3144,8 @@ export default class VimMotionsPlugin extends Plugin {
         this.uninstallVisualLineFix = null;
         this.uninstallAtomicRangeMotions?.();
         this.uninstallAtomicRangeMotions = null;
+        this.uninstallPreviewConcealMotions?.();
+        this.uninstallPreviewConcealMotions = null;
         this.uninstallTableCellMotions?.();
         this.uninstallTableCellMotions = null;
         this.uninstallChineseWordMotions?.();
@@ -3506,6 +3517,22 @@ export default class VimMotionsPlugin extends Plugin {
         slot.push(ext);
     }
 
+    private applyPreviewConcealSlot(): void {
+        this.setSlotEnabled(
+            this.previewConcealSlot,
+            'previewConceal',
+            this.settings.previewConceal && isBundledVimActive(),
+            () =>
+                createPreviewConceal(() => ({
+                    policy:
+                        this.settings.previewConcealReveal === 'insert'
+                            ? 'insert'
+                            : 'delay',
+                    delay: concealDelay(this.settings.previewConcealDelay),
+                })),
+        );
+    }
+
     private applyUndoTreeSlot(): void {
         this.setSlotEnabled(
             this.undoTreeSlot,
@@ -3835,6 +3862,7 @@ export default class VimMotionsPlugin extends Plugin {
 
     private populateRuntimeSlots(): void {
         this.applyAnimatedCursorSlot();
+        this.applyPreviewConcealSlot();
         this.applyUndoTreeSlot();
         this.applyTableRevealSlot();
         this.applyRawDeprecationNotice();
@@ -3919,6 +3947,8 @@ export default class VimMotionsPlugin extends Plugin {
 
         this.uninstallAtomicRangeMotions?.();
         this.uninstallAtomicRangeMotions = null;
+        this.uninstallPreviewConcealMotions?.();
+        this.uninstallPreviewConcealMotions = null;
         this.uninstallTableCellMotions?.();
         this.uninstallTableCellMotions = null;
         this.uninstallChineseWordMotions?.();
@@ -4101,6 +4131,9 @@ export default class VimMotionsPlugin extends Plugin {
             );
         }
         if (isBundledVimActive()) {
+            if (this.settings.previewConceal)
+                this.uninstallPreviewConcealMotions =
+                    applyPreviewConcealMotions(vim);
             this.uninstallAtomicRangeMotions = applyAtomicRangeMotions(vim);
         }
         activeDocument.body.classList.toggle(

@@ -1,0 +1,40 @@
+diff --git a/node_modules/@replit/codemirror-vim/dist/index.js b/node_modules/@replit/codemirror-vim/dist/index.js
+--- a/node_modules/@replit/codemirror-vim/dist/index.js
++++ b/node_modules/@replit/codemirror-vim/dist/index.js
+@@ -3289,7 +3289,15 @@
+         var res=cm.findPosV(cur,(motionArgs.forward ? 1 : -1),'line',vim.lastHSPos);
+         // @ts-ignore — Obsidian extends findPosV return with focusBefore for frontmatter widget navigation
+         if (res.focusBefore) { res.focusBefore(); return cur; }
+-        if (res.hitSide) break;
++        if (res.hitSide) {
++          // Reaching EOF can still enter a shorter wrapped display row.
++          // Only stop at a boundary when no vertical movement is possible;
++          // keep lastHSPos intact so the reverse motion restores its goal.
++          var before = cm.charCoords(cur, 'div');
++          var after = cm.charCoords(res, 'div');
++          if (Math.abs(after.top - before.top) <
++              Math.max(1, (before.bottom - before.top) / 2)) break;
++        }
+         cur = res;
+       }
+       if (cur != head)
+diff --git a/node_modules/@replit/codemirror-vim/dist/index.cjs b/node_modules/@replit/codemirror-vim/dist/index.cjs
+--- a/node_modules/@replit/codemirror-vim/dist/index.cjs
++++ b/node_modules/@replit/codemirror-vim/dist/index.cjs
+@@ -3309,7 +3309,15 @@
+         var res=cm.findPosV(cur,(motionArgs.forward ? 1 : -1),'line',vim.lastHSPos);
+         // @ts-ignore — Obsidian extends findPosV return with focusBefore for frontmatter widget navigation
+         if (res.focusBefore) { res.focusBefore(); return cur; }
+-        if (res.hitSide) break;
++        if (res.hitSide) {
++          // Reaching EOF can still enter a shorter wrapped display row.
++          // Only stop at a boundary when no vertical movement is possible;
++          // keep lastHSPos intact so the reverse motion restores its goal.
++          var before = cm.charCoords(cur, 'div');
++          var after = cm.charCoords(res, 'div');
++          if (Math.abs(after.top - before.top) <
++              Math.max(1, (before.bottom - before.top) / 2)) break;
++        }
+         cur = res;
+       }
+       if (cur != head)

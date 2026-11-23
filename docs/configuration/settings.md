@@ -70,6 +70,20 @@ On Obsidian 1.13+, pages appear as navigable entries in the settings sidebar. On
 > [!warning]
 > **Workspace navigation**: `<C-w>`, `Ctrl-d`, `Ctrl-f` and `Ctrl-b` may conflict with Obsidian's default hotkeys, as may the jump list's `<C-o>` (Quick switcher) and `<C-i>` (Toggle italics), and `<C-e>` (Toggle reading view), `<C-t>` (New tab) and `<C-g>` (Open graph view). The plugin detects these conflicts on startup and shows a Notice. Use the **Check hotkey conflicts** button in this settings group to see active conflicts and unbinding instructions.
 
+## Live Preview conceal
+
+These controls are under **General → Vim features** and apply to the bundled Vim engine in Live Preview.
+
+| Setting                   | Type     | Default     | Behavior                                                                                          |
+| ------------------------- | -------- | ----------- | ------------------------------------------------------------------------------------------------- |
+| Live Preview conceal      | toggle   | `false`     | Keep supported Markdown syntax hidden during navigation.                                          |
+| Conceal source reveal     | dropdown | After delay | Reveal after a pause, or only when editing.                                                       |
+| Conceal reveal delay (ms) | integer  | `200`       | 0–10000 milliseconds without cursor movement. Zero reveals immediately; used only by After delay. |
+
+A delayed-revealed region stays in source form while the cursor moves within it, including its delimiters and link destination. Leaving restores preview; adjacent regions have independent reveal state. Insert mode opens only the current supported region.
+
+Settings are saved as `previewConceal`, `previewConcealReveal` (`delay` / `insert`) and `previewConcealDelay`. The corresponding vimrc options are `previewconceal`, `previewconcealreveal` and `previewconcealdelay`; Lua uses the same names through `vim.opt`. See [[preview-conceal]] for scope and source-range semantics.
+
 ## Picker
 
 > [!info]

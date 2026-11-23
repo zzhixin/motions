@@ -40,10 +40,9 @@ interface VisualLineState {
 /**
  * Per-EditorView snapshot of the visual-line selection range, set by
  * {@link withExpandedSelection} before it temporarily expands the native CM6
- * selection.  The {@link VisualLineSomethingSelectedPatch} reads this as a
- * last-resort fallback when vim is no longer in visual-line mode AND the
- * inline `lastVisualLineSel` cache was never populated (which happens when
- * `getSelection()` was satisfied by the expanded native selection).
+ * selection, or by a direct visual-line `getSelection()` call. It belongs
+ * only to delayed replacement; selection queries report the current selection
+ * so a later search cannot resurrect a range after visual mode ends.
  *
  * Cleared on first successful use by `replaceSelection`, or after a 30 s TTL
  * to prevent stale replacements when a modal is cancelled.
@@ -70,10 +69,6 @@ function setPendingSel(editorView: EditorView, sel: VimSel): void {
         },
         timer,
     });
-}
-
-function peekPendingSel(editorView: EditorView): VimSel | null {
-    return pendingVisualLineSel.get(editorView)?.sel ?? null;
 }
 
 function clearPendingSel(editorView: EditorView): void {
@@ -141,9 +136,10 @@ function withExpandedSelection(
     if (!state) return fn.apply(thisArg, args);
 
     // Snapshot BEFORE expanding — async commands (Note Composer, Note Refactor)
-    // call getSelection/replaceSelection after their modal closes, by which
+    // call replaceSelection after their modal closes, by which
     // time the expanded native selection and visual-line vim state are both
-    // gone.  The snapshot survives as a last-resort fallback.
+    // gone. The snapshot survives for that replacement, without becoming
+    // visible to unrelated selection queries such as a subsequent search.
     setPendingSel(state.editorView as unknown as EditorView, state.vim.sel!);
 
     expandSelection(state.editorView, state.vim.sel!);
@@ -294,8 +290,6 @@ class VisualLineSomethingSelectedPatch {
         this.original = origSelected;
         this.editorRef = editor;
 
-        let lastVisualLineSel: VimSel | null = null;
-
         const getVisualLineSel = (): VimState | null => {
             const cm = getCmAdapterFromEditorView(editorView);
             const vim = cm?.state?.vim as unknown as VimState | undefined;
@@ -305,12 +299,8 @@ class VisualLineSomethingSelectedPatch {
 
         editor.somethingSelected = function () {
             if (origSelected()) return true;
-            if (getVisualLineSel() !== null) return true;
-            if (lastVisualLineSel !== null && isSelInBounds(lastVisualLineSel))
-                return true;
-            const pending = peekPendingSel(editorView);
-            if (pending && isSelInBounds(pending)) return true;
-            return false;
+            const sel = getVisualLineSel()?.sel;
+            return !!sel && isSelInBounds(sel);
         };
 
         const isSelInBounds = (sel: VimSel): boolean => {
@@ -327,18 +317,9 @@ class VisualLineSomethingSelectedPatch {
         editor.getSelection = function () {
             const nativeSel = origGetSel();
             if (nativeSel) return nativeSel;
-            const vim = getVisualLineSel();
-            let sel: VimSel | null =
-                vim?.sel ?? lastVisualLineSel ?? peekPendingSel(editorView);
-            if (sel && !isSelInBounds(sel)) {
-                lastVisualLineSel = null;
-                sel = null;
-            }
-            if (!sel) return '';
-            lastVisualLineSel = {
-                anchor: { line: sel.anchor.line, ch: sel.anchor.ch },
-                head: { line: sel.head.line, ch: sel.head.ch },
-            };
+            const sel = getVisualLineSel()?.sel;
+            if (!sel || !isSelInBounds(sel)) return '';
+            setPendingSel(editorView, sel);
             const startLine = Math.min(sel.anchor.line, sel.head.line);
             const endLine = Math.max(sel.anchor.line, sel.head.line);
             const doc = editorView.state.doc;
@@ -351,16 +332,16 @@ class VisualLineSomethingSelectedPatch {
         editor.replaceSelection = function (text: string, origin?: string) {
             const vim = getVisualLineSel();
             let sel: VimSel | null =
-                vim?.sel ?? lastVisualLineSel ?? consumePendingSel(editorView);
+                vim?.sel ??
+                (origSelected() ? null : consumePendingSel(editorView));
             if (sel && !isSelInBounds(sel)) {
-                lastVisualLineSel = null;
                 sel = null;
             }
+            clearPendingSel(editorView);
             if (!sel) {
                 origReplaceSel(text, origin);
                 return;
             }
-            if (lastVisualLineSel) lastVisualLineSel = null;
             const startLine = Math.min(sel.anchor.line, sel.head.line);
             const endLine = Math.max(sel.anchor.line, sel.head.line);
             const doc = editorView.state.doc;
@@ -421,6 +402,7 @@ class VisualLineSomethingSelectedPatch {
     }
 
     destroy(): void {
+        clearPendingSel(this.view);
         if (this.editorRef) {
             if (this.original) this.editorRef.somethingSelected = this.original;
             if (this.origGetSelection)

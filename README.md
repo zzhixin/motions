@@ -1,6 +1,8 @@
 # Vim Motions
 
-This branch combines the IME focus-memory and Chinese Flash features for personal testing. See [Personal release](PERSONAL_RELEASE.md) for installation and version details. It is maintained separately from both feature branches and their pull requests.
+`personal/main` is the long-lived branch for this personal plugin version, combining custom features and fixes with future upstream updates. It started as `integration/ime-and-chinese` and is maintained separately from the source feature branches and their pull requests. See [Personal release](PERSONAL_RELEASE.md) for the historical prerelease's installation and version details.
+
+The cumulative [feature and fix summary since `84770d2`](docs/changes-since-84770d2/index.md) covers Chinese word support, Live Preview conceal, bug fixes and the branch's maintenance rules.
 
 A polished, Neovim-native experience inside [Obsidian](https://obsidian.md). Vim Motions adds what's missing from Obsidian's built-in Vim mode: Markdown-aware text objects, structural navigation, hard-wrap formatting, workspace keyboard control, EasyMotion, Lua configuration with `vim.keymap.set` / `vim.opt` / `vim.fn` / `vim.api` / `vim.tbl_*` / autocommands / timers / highlight groups, and a built-in `.obsidian.vimrc` loader.
 
@@ -8,6 +10,7 @@ A polished, Neovim-native experience inside [Obsidian](https://obsidian.md). Vim
 
 ## Features
 
+- **Live Preview conceal** — optional navigation over visible Markdown text, with delayed source reveal (default 200 ms, configurable in milliseconds) or reveal only when editing. Revealed source stays open until the cursor leaves its region; adjacent regions remain independent. Supports emphasis, inline code, headings and links. [Details](docs/features/preview-conceal.md).
 - **Chinese word segmentation** — `w`/`W`, `dw`/`cw`/`yw`, and `iw`/`aw` operators recognize Chinese words using the system dictionary, with bounded caching and no downloads. [Details](docs/features/chinese-words.md).
 - **Markdown text objects** — operate on bold, italic, code, math, links, blockquotes, code blocks, callouts, tags, table cells, subwords, numbers, quotes, wikilinks, URLs, arguments, and indentation with `d`, `c`, `y`, `v`
 - **Structural navigation** — jump between headings, lists, links, and buffers with `]h`, `]l`, `]n`, `]b`

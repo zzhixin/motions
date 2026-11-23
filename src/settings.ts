@@ -10,6 +10,7 @@ import {
     TextComponent,
 } from 'obsidian';
 import type { SettingDefinitionItem } from 'obsidian';
+import { concealDelay } from './vim/conceal/options';
 import VimMotionsPlugin from './main';
 import { isBundledVimActive } from './vim/bundled-vim';
 import {
@@ -132,6 +133,9 @@ export interface VimMotionsSettings {
     enableTextObjects: boolean;
     enableNavigation: boolean;
     enableSubwordMotions: boolean;
+    previewConceal: boolean;
+    previewConcealReveal: 'delay' | 'insert';
+    previewConcealDelay: number;
     enableWorkspaceNav: boolean;
     workspaceNavViewTypes: string;
     picker: boolean;
@@ -329,6 +333,9 @@ export const DEFAULT_SETTINGS: VimMotionsSettings = {
     enableTextObjects: true,
     enableNavigation: true,
     enableSubwordMotions: false,
+    previewConceal: false,
+    previewConcealReveal: 'delay',
+    previewConcealDelay: 200,
     enableWorkspaceNav: true,
     workspaceNavViewTypes: '',
     picker: true,
@@ -550,6 +557,9 @@ export class VimMotionsSettingTab extends PluginSettingTab {
         'enableTextObjects',
         'enableNavigation',
         'enableSubwordMotions',
+        'previewConceal',
+        'previewConcealReveal',
+        'previewConcealDelay',
         'enableHardWrap',
         'enableReplaceWithRegister',
         'enableDial',
@@ -887,6 +897,59 @@ export class VimMotionsSettingTab extends PluginSettingTab {
                                         this.isOverridden(
                                             'enableSubwordMotions',
                                         ),
+                                },
+                            },
+                            {
+                                name: 'Live Preview conceal',
+                                desc: this.describeOverride(
+                                    'previewConceal',
+                                    'Keep Markdown formatting hidden while navigating in normal and characterwise visual mode. Bundled Vim engine only.',
+                                ),
+                                control: {
+                                    type: 'toggle' as const,
+                                    key: 'previewConceal',
+                                    defaultValue: false,
+                                },
+                            },
+                            {
+                                name: 'Conceal source reveal',
+                                desc: this.describeOverride(
+                                    'previewConcealReveal',
+                                    'Reveal source after navigation stops, or only when editing. Revealed source stays open until the cursor leaves its region. Mouse interactions reveal source immediately.',
+                                ),
+                                control: {
+                                    type: 'dropdown' as const,
+                                    key: 'previewConcealReveal',
+                                    options: {
+                                        delay: 'After delay',
+                                        insert: 'When editing',
+                                    },
+                                    disabled: () =>
+                                        !this.plugin.settings.previewConceal,
+                                },
+                            },
+                            {
+                                name: 'Conceal reveal delay (ms)',
+                                desc: this.describeOverride(
+                                    'previewConcealDelay',
+                                    'Milliseconds without cursor movement before showing source. Zero reveals immediately. Range: 0–10000 ms.',
+                                ),
+                                control: {
+                                    type: 'number' as const,
+                                    key: 'previewConcealDelay',
+                                    min: 0,
+                                    max: 10000,
+                                    step: 1,
+                                    disabled: () =>
+                                        !this.plugin.settings.previewConceal ||
+                                        this.plugin.settings
+                                            .previewConcealReveal !== 'delay',
+                                    validate: (value: number) =>
+                                        Number.isInteger(value) &&
+                                        value >= 0 &&
+                                        value <= 10000
+                                            ? undefined
+                                            : 'Enter an integer from 0 to 10000 milliseconds',
                                 },
                             },
                             {
@@ -3191,6 +3254,7 @@ export class VimMotionsSettingTab extends PluginSettingTab {
     }
 
     async setControlValue(key: string, value: unknown): Promise<void> {
+        if (key === 'previewConcealDelay') value = concealDelay(value);
         const s: Record<string, unknown> = this.plugin.settings as never;
         const dotIdx = key.indexOf('.');
         if (dotIdx !== -1) {
@@ -3539,6 +3603,82 @@ export class VimMotionsSettingTab extends PluginSettingTab {
                         this.plugin.reloadFeatures();
                     }),
             );
+
+        new Setting(containerEl)
+            .setName('Live Preview conceal')
+            .setDesc(
+                describeOverride(
+                    'previewConceal',
+                    'Keep Markdown formatting hidden while navigating in normal and characterwise visual mode. Bundled Vim engine only.',
+                ),
+            )
+            .addToggle((toggle) =>
+                toggle
+                    .setValue(this.plugin.settings.previewConceal)
+                    .onChange(async (value) => {
+                        this.plugin.settings.previewConceal = value;
+                        this.plugin.clearSettingOverride('previewConceal');
+                        await this.plugin.saveSettings();
+                        this.plugin.reloadFeatures();
+                        this.refreshSettingsDisplay();
+                    }),
+            );
+        new Setting(containerEl)
+            .setName('Conceal source reveal')
+            .setDesc(
+                describeOverride(
+                    'previewConcealReveal',
+                    'Reveal source after navigation stops, or only when editing. Revealed source stays open until the cursor leaves its region. Mouse interactions reveal source immediately.',
+                ),
+            )
+            .addDropdown((dropdown) =>
+                dropdown
+                    .addOptions({
+                        delay: 'After delay',
+                        insert: 'When editing',
+                    })
+                    .setValue(this.plugin.settings.previewConcealReveal)
+                    .setDisabled(!this.plugin.settings.previewConceal)
+                    .onChange(async (value) => {
+                        this.plugin.settings.previewConcealReveal =
+                            value === 'insert' ? 'insert' : 'delay';
+                        this.plugin.clearSettingOverride(
+                            'previewConcealReveal',
+                        );
+                        await this.plugin.saveSettings();
+                        this.plugin.reloadFeatures();
+                        this.refreshSettingsDisplay();
+                    }),
+            );
+        new Setting(containerEl)
+            .setName('Conceal reveal delay (ms)')
+            .setDesc(
+                describeOverride(
+                    'previewConcealDelay',
+                    'Milliseconds without cursor movement before showing source. Zero reveals immediately. Range: 0–10000 ms.',
+                ),
+            )
+            .addText((text) => {
+                text.setValue(String(this.plugin.settings.previewConcealDelay));
+                text.inputEl.type = 'number';
+                text.inputEl.min = '0';
+                text.inputEl.max = '10000';
+                text.inputEl.step = '1';
+                text.setDisabled(
+                    !this.plugin.settings.previewConceal ||
+                        this.plugin.settings.previewConcealReveal !== 'delay',
+                );
+                text.onChange(async (value) => {
+                    if (value.trim() === '' || !Number.isFinite(Number(value)))
+                        return;
+                    this.plugin.settings.previewConcealDelay = concealDelay(
+                        Number(value),
+                    );
+                    this.plugin.clearSettingOverride('previewConcealDelay');
+                    await this.plugin.saveSettings();
+                    this.plugin.reloadFeatures();
+                });
+            });
 
         new Setting(containerEl)
             .setName('Hard-wrap operator (gq)')

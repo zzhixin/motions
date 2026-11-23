@@ -367,6 +367,18 @@ export const KNOWN_SET_OPTIONS: Record<string, KnownOpt> = {
     harpoon: { type: 'boolean', settingsKey: 'enableHarpoon' },
     dial: { type: 'boolean', settingsKey: 'enableDial' },
     subword: { type: 'boolean', settingsKey: 'enableSubwordMotions' },
+    previewconceal: { type: 'boolean', settingsKey: 'previewConceal' },
+    previewconcealreveal: {
+        type: 'string',
+        settingsKey: 'previewConcealReveal',
+        validValues: ['delay', 'insert'],
+    },
+    previewconcealdelay: {
+        type: 'number',
+        settingsKey: 'previewConcealDelay',
+        min: 0,
+        max: 10000,
+    },
     picker: { type: 'boolean', settingsKey: 'picker' },
     pickerleadermappings: {
         type: 'boolean',

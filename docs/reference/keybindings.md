@@ -7,6 +7,20 @@ tags:
     - cheat-sheet
 ---
 
+## Live Preview conceal
+
+With [[preview-conceal|Live Preview conceal]] enabled, these existing motions navigate visible text in normal and characterwise visual mode. No additional keybinding is installed.
+
+| Keys                                                 | Behavior                                                             |
+| ---------------------------------------------------- | -------------------------------------------------------------------- |
+| `h` / `l`, counts                                    | Move by visible grapheme clusters; hidden syntax has no stop.        |
+| `w` / `b` / `e` / `ge`, WORD and subword variants    | Compute word destinations on visible text, then map back to source.  |
+| `j` / `k`                                            | Move between source lines while retaining a visible grapheme column. |
+| `0`, `^`, `$`, column/line/page/display-line motions | Keep destinations outside supported hidden syntax.                   |
+| `i`, `a`, other insert-mode entry                    | Restore Obsidian's source display for editing.                       |
+
+Operators and text objects keep their original source ranges; source copied across formatting may contain Markdown delimiters. Once a delayed reveal opens a region, navigation includes its visible source syntax until the cursor leaves. Adjacent regions remain independent.
+
 ## Chinese word segmentation
 
 These existing Vim commands recognize dictionary words in Chinese text in the bundled engine. Non-Chinese text keeps ordinary Vim word/WORD behavior.
@@ -435,6 +449,15 @@ Navigate Obsidian panes, tabs, and history following Neovim conventions.
 | `zk`         | Move to end of previous fold                |
 | `[z`         | Move to start of current fold               |
 | `]z`         | Move to end of current fold                 |
+
+## Display-line movement
+
+| Keybinding | Description                                                       |
+| ---------- | ----------------------------------------------------------------- |
+| `gj`       | Move down one displayed row, including a shorter final row at EOF |
+| `gk`       | Move up one displayed row                                         |
+
+These motions retain the desired screen column. If the final row is shorter, `gj` lands on its last character; `gk` returns to the original column on a longer row. A count such as `9gj` stops at the last displayed row, and another `gj` there does not move the cursor. This also applies when the last source line wraps in Live Preview.
 
 ## Vertical scroll
 
