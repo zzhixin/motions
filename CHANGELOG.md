@@ -78,7 +78,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `AGENTS.md`, `CONTRIBUTING.md`, `docs/changes-since-84770d2/index.md`: document generated-artifact exclusions from source linting and formatting.
 - `AGENTS.md`: make personal-branch documentation rules explicit and independent of the current branch name, including incremental canonical docs, upstream-merge records, commit/release status and evidence requirements. Update ongoing branch references to `personal/main` while preserving historical release names.
-- `docs/changes-since-84770d2/index.md`: cumulative Chinese record of every feature/fix since the integration baseline, including current working-tree changes, regression origins, settings, architecture, performance evidence and a commit index. Dedicated directory for subsequent records in this range; canonical docs continue to receive incremental updates.
+- `docs/changes-since-84770d2/index.md`: cumulative Chinese record of every feature/fix since the integration baseline through implementation commit `1dc7341`, with regression origins, settings, architecture, performance evidence and a commit index. Dedicated directory for subsequent records in this range; canonical docs continue to receive incremental updates.
 - `PERSONAL_RELEASE.md`, `README.md`, `docs/features/index.md`, `AGENTS.md`: link the cumulative record and distinguish historical prerelease contents from later changes.
 
 - `test/specs/visual-line-search-negative-controls.md`
